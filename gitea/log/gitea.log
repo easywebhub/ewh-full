@@ -1,0 +1,78 @@
+2017/04/04 15:54:17 [I] Log Mode: File(Info)
+2017/04/04 15:54:17 [I] XORM Log Mode: File(Info)
+2017/04/04 15:54:17 [I] Cache Service Enabled
+2017/04/04 15:54:17 [I] Session Service Enabled
+2017/04/04 15:54:19 [I] Git Version: 2.11.1
+2017/04/04 15:54:19 [W] Clean up repository temporary data [data\tmp]: exit status 2
+2017/04/04 15:54:19 [I] SQLite3 Supported
+2017/04/04 15:54:19 [I] Run Mode: Production
+2017/04/04 15:54:19 [I] Listen: http://0.0.0.0:3000
+2017/04/04 15:54:19 [I] LFS server enabled
+2017/04/04 15:56:22 [I] Log Mode: File(Info)
+2017/04/04 15:56:22 [I] XORM Log Mode: File(Info)
+2017/04/04 15:56:22 [I] Cache Service Enabled
+2017/04/04 15:56:22 [I] Session Service Enabled
+2017/04/04 15:56:22 [I] Git Version: 2.11.1
+2017/04/04 15:56:23 [W] Clean up repository temporary data [data\tmp]: exit status 2
+2017/04/04 15:56:23 [I] SQLite3 Supported
+2017/04/04 15:56:23 [I] Run Mode: Production
+2017/04/04 15:56:23 [I] First-time run install finished!
+2017/04/04 15:56:23 [I] New random avatar created: 1
+2017/04/04 16:08:42 [I] Log Mode: File(Info)
+2017/04/04 16:08:42 [I] XORM Log Mode: File(Info)
+2017/04/04 16:08:42 [I] Cache Service Enabled
+2017/04/04 16:08:42 [I] Session Service Enabled
+2017/04/04 16:08:42 [I] Git Version: 2.11.1
+2017/04/04 16:08:42 [W] Clean up repository temporary data [data\tmp]: exit status 2
+2017/04/04 16:08:42 [I] SQLite3 Supported
+2017/04/04 16:08:42 [I] Run Mode: Production
+2017/04/04 16:08:42 [I] Listen: http://0.0.0.0:3000
+2017/04/04 16:08:42 [I] LFS server enabled
+2017/04/04 16:09:06 [I] New random avatar created: 1
+2017/04/04 16:10:51 [I] Log Mode: File(Info)
+2017/04/04 16:10:51 [I] XORM Log Mode: File(Info)
+2017/04/04 16:10:51 [I] Cache Service Enabled
+2017/04/04 16:10:51 [I] Session Service Enabled
+2017/04/04 16:10:51 [I] Git Version: 2.11.1
+2017/04/04 16:10:52 [W] Clean up repository temporary data [data\tmp]: exit status 2
+2017/04/04 16:10:52 [I] SQLite3 Supported
+2017/04/04 16:10:52 [I] Run Mode: Production
+2017/04/04 16:10:52 [I] Listen: http://0.0.0.0:3000
+2017/04/04 16:10:52 [I] LFS server enabled
+2017/04/04 16:15:17 [I] New random avatar created: 2
+2017/04/04 16:20:30 [I] New random avatar created: 3
+2017/04/04 16:21:03 [I] New random avatar created: 3
+2017/04/04 16:21:54 [I] New random avatar created: 1
+2017/04/04 16:22:11 [I] New random avatar created: 3
+2017/04/04 16:23:40 [I] New random avatar created: 3
+2017/04/04 16:36:14 [I] New random avatar created: 4
+2017/04/04 16:36:55 [W] Delete repository files [D:\Project\ewh-full\gitea\repositories\test\pillar.git]: exit status 2
+2017/04/04 16:36:55 [W] Delete repository wiki [D:\Project\ewh-full\gitea\repositories\test\pillar.wiki.git]: exit status 2
+2017/04/04 16:36:55 [W] Delete repository wiki [data\tmp\local-wiki\2]: exit status 3
+2017/04/04 16:36:55 [I] New random avatar created: 4
+2017/04/04 16:37:08 [...routers/repo/http.go:137 HTTP()] [E] invalid token
+2017/04/04 16:37:08 [W] Delete repository files [D:\Project\ewh-full\gitea\repositories\test\pillar.git]: exit status 2
+2017/04/04 16:37:08 [W] Delete repository wiki [D:\Project\ewh-full\gitea\repositories\test\pillar.wiki.git]: exit status 2
+2017/04/04 16:37:08 [W] Delete repository wiki [data\tmp\local-wiki\3]: exit status 3
+2017/04/04 16:37:08 [I] New random avatar created: 4
+2017/04/04 16:38:05 [...routers/repo/http.go:137 HTTP()] [E] invalid token
+2017/04/04 16:38:05 [W] Delete repository files [D:\Project\ewh-full\gitea\repositories\test\pillar.git]: exit status 2
+2017/04/04 16:38:05 [W] Delete repository wiki [D:\Project\ewh-full\gitea\repositories\test\pillar.wiki.git]: exit status 2
+2017/04/04 16:38:05 [W] Delete repository wiki [data\tmp\local-wiki\4]: exit status 3
+2017/04/04 16:38:05 [I] New random avatar created: 4
+2017/04/04 16:38:20 [...routers/repo/http.go:137 HTTP()] [E] invalid token
+2017/04/04 16:38:20 [W] Delete repository files [D:\Project\ewh-full\gitea\repositories\test\pillar.git]: exit status 2
+2017/04/04 16:38:20 [W] Delete repository wiki [D:\Project\ewh-full\gitea\repositories\test\pillar.wiki.git]: exit status 2
+2017/04/04 16:38:20 [W] Delete repository wiki [data\tmp\local-wiki\5]: exit status 3
+2017/04/04 16:38:20 [I] New random avatar created: 4
+2017/04/04 16:38:39 [...routers/repo/http.go:137 HTTP()] [E] invalid token
+2017/04/04 16:39:19 [I] New random avatar created: 3
+2017/04/04 16:40:54 [I] New random avatar created: 4
+2017/04/04 16:40:59 [...routers/repo/http.go:137 HTTP()] [E] invalid token
+2017/04/04 16:40:59 [W] Delete repository files [D:\Project\ewh-full\gitea\repositories\test\pillar.git]: exit status 2
+2017/04/04 16:40:59 [W] Delete repository wiki [D:\Project\ewh-full\gitea\repositories\test\pillar.wiki.git]: exit status 2
+2017/04/04 16:40:59 [W] Delete repository wiki [data\tmp\local-wiki\6]: exit status 3
+2017/04/04 16:40:59 [I] New random avatar created: 4
+2017/04/04 16:41:08 [...routers/repo/http.go:466 func1()] [E] HTTPBackend: GetFileAttributesEx D:/Project/ewh-full/gitea/repositories/templates/pillar.wiki.git: The system cannot find the file specified.
+2017/04/04 16:41:08 [I] New random avatar created: 4
+2017/04/04 16:46:59 [I] New random avatar created: 1
