@@ -1,0 +1,8 @@
+/backend/cloudflare.json
+/gitea/log
+/backend/.idea
+/backend/node_modules
+/nginx/logs
+/nginx/temp
+/gitea/data
+/gitea/indexers

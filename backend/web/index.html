@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+
+    <title>EWH - Easy Web Hub</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="css/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="css/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="css/layout-default-latest.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body>
+
+<app></app>
+
+<!-- RIOT TAGS -->
+<script src="tag/sidebar.tag" type="riot/tag"></script>
+<script src="tag/iframe-inline-editor.tag" type="riot/tag"></script>
+<script src="tag/dialog-login-register.tag" type="riot/tag"></script>
+<script src="tag/home.tag" type="riot/tag"></script>
+<script src="tag/landing.tag" type="riot/tag"></script>
+
+<!-- JS -->
+<script src="js/riot+compiler.min.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/axios.min.js"></script>
+<script src="js/lodash.min.js"></script>
+<script src="js/moment-with-locales.min.js"></script>
+<script src="js/semantic.min.js"></script>
+<script src="js/flatpickr.min.js"></script>
+<script src="js/jquery.layout.min.js"></script>
+
+<!-- STARTUP -->
+<script>
+
+    var globalStore = {};
+    riot.mixin(globalStore, true);
+
+    riot.mount('*', {
+        siteBuilderUrl: 'http://localhost:8002'
+//        siteBuilderUrl: 'http://163.172.149.161:8002'
+    });
+</script>
+
+</body>
+</html>
