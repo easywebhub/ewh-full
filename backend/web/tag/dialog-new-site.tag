@@ -1,5 +1,5 @@
-<dialog-login-register>
-
+<dialog-new-site>
+    <h1>dialog new site</h1>
 
     <script>
         var me = this;
@@ -14,4 +14,4 @@
     </script>
 
     <style></style>
-</dialog-login-register>
+</dialog-new-site>

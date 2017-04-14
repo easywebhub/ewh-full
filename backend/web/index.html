@@ -18,12 +18,12 @@
 </head>
 <body>
 
-<app></app>
+<landing></landing>
 
 <!-- RIOT TAGS -->
 <script src="tag/sidebar.tag" type="riot/tag"></script>
 <script src="tag/iframe-inline-editor.tag" type="riot/tag"></script>
-<script src="tag/dialog-login-register.tag" type="riot/tag"></script>
+<script src="tag/dialog-login-signup.tag" type="riot/tag"></script>
 <script src="tag/home.tag" type="riot/tag"></script>
 <script src="tag/landing.tag" type="riot/tag"></script>
 
@@ -39,15 +39,46 @@
 
 <!-- STARTUP -->
 <script>
+    var store = {};
 
-    var globalStore = {};
-    riot.mixin(globalStore, true);
+    var api = {
+        getSiteList: function (accountId) {
+            console.log('api getSiteList', accountId);
+            return axios.get('/api/site');
+        },
 
-    riot.mount('*', {
-        siteBuilderUrl: 'http://localhost:8002'
-//        siteBuilderUrl: 'http://163.172.149.161:8002'
+        addSite: function (name, templateName) {
+            return axios.post('/api/site', {
+                name:         name,
+                templateName: templateName
+            });
+        },
+
+        login: function (email, password) {
+            return axios.post('/api/user/login', {
+                email:    email,
+                password: password
+            });
+        },
+
+        register: function (email, password) {
+            return axios.post('/api/user', {
+                email:    email,
+                password: password
+            });
+        }
+    };
+
+    var event = riot.observable();
+
+    riot.mixin('store', {store: store}, true);
+    riot.mixin('event', {event: riot.observable()}, true);
+    riot.mixin('api', {api: api}, true);
+
+
+    riot.compile(function () {
+        riot.mount('*');
     });
 </script>
-
 </body>
 </html>

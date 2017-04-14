@@ -1,0 +1,17 @@
+{
+    "version": 6,
+    "templates": [
+        {
+            "name": "pillar",
+            "description": "Landing page for your company",
+            "branch": "master",
+            "type": "website",
+            "tags": [
+                "Bootstrap 3.x",
+                "multi-purpose"
+            ],
+            "themeUrl": "http://pillar.mediumra.re/",
+            "price": "19$"
+        }
+    ]
+}

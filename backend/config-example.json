@@ -1,0 +1,11 @@
+{
+    "host"      : "127.0.0.1",
+    "port"      : 8002,
+    "timeout"   : 300000,
+    "builderUrl": "http://localhost:8002",
+    "authUrl"   : "https://api.easywebhub.com",
+    "cloudflare": {
+        "email": "321@vis.moc",
+        "key"  : "123"
+    }
+}

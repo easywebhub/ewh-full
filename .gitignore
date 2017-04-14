@@ -6,3 +6,4 @@
 /nginx/temp
 /gitea/data
 /gitea/indexers
+/backend/config.json
