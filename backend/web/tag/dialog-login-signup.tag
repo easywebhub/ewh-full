@@ -123,11 +123,11 @@
 
             try {
                 validateLoginForm();
-                me.api.login(me.email, me.password).then(function (result) {
-                    console.log('login success, trigger loginSuccess, result', result);
+                me.api.login(me.email, me.password).then(function (resp) {
+                    console.log('login success, trigger loginSuccess, result', resp);
                     me.isRequesting = false;
                     me.hide();
-                    riot.event.trigger('loginSuccess', result);
+                    me.event.trigger('checkToken');
                 }).catch(function (err) {
                     console.log('login fail', JSON.stringify(err, null, 4));
                     me.errorMsg = err.response.data.message;

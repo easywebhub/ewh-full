@@ -14,7 +14,7 @@ const Fs = require('fs');
 
 
 const DEBUG = /--debug/.test(process.argv.toString());
-const FAKE_DATA = true;
+const FAKE_DATA = false;
 const FakeStore = require('./fake-store.js');
 
 const Config = JSON.parse(Fs.readFileSync('config.json'));
@@ -114,7 +114,7 @@ App.get('/build/:website', (req, res, next) => {
     next();
 });
 
-App.get('/templates', (req, res, next) => {
+App.get('/api/templates', (req, res, next) => {
     Fs.readFile('templates.json', (err, data) => {
         if (err) return ResponseError(res, err);
         ResponseSuccess(res, JSON.parse(data.toString()));
@@ -122,8 +122,27 @@ App.get('/templates', (req, res, next) => {
     });
 });
 
-App.get('/:username/:repository', Express.static('web'));
-App.use('/', Express.static('web'));
+let staticHandler = Express.static('web');
+
+App.get('/:username/:repository', staticHandler);
+App.use('/', staticHandler);
+
+let transformUserInfo = function (user) {
+    return {
+        id:          user.AccountId,
+        accountType: user.AccountType,
+        username:    user.UserName,
+        status:      user.Status,
+        accessLevel: user.AccessLevels || [],
+        info:        {
+            address: user.Info.Address,
+            age:     user.Info.Age,
+            name:    user.Info.Name,
+            phone:   user.Info.Phone,
+            sex:     user.Info.Sex
+        }
+    }
+};
 
 App.post('/api/user/login', JsonBodyParser, (req, res, next) => {
     if (FAKE_DATA) {
@@ -141,19 +160,9 @@ App.post('/api/user/login', JsonBodyParser, (req, res, next) => {
         Username: req.body.email,
         Password: req.body.password
     }).then(function (resp) {
-        ResponseSuccess(res, {
-            id:          resp.AccountId,
-            accountType: resp.AccountType,
-            username:    resp.UserName,
-            status:      resp.Status,
-            accessLevel: resp.AccessLevels || [],
-            info:        {
-                address: resp.Info.Address,
-                age:     resp.Info.Age,
-                name:    resp.Info.Name,
-                sex:     resp.Info.Sex
-            }
-        });
+        let acc = transformUserInfo(resp.data);
+        req.session.user = acc;
+        ResponseSuccess(res, acc);
         // TODO req.session.user = acc;
     }).catch(err => {
         try {
@@ -167,50 +176,60 @@ App.post('/api/user/login', JsonBodyParser, (req, res, next) => {
 
 // Register
 App.post('/api/user', JsonBodyParser, (req, res, next) => {
-    try {
-        if (FAKE_DATA) {
-            let userInfo = FakeStore.register(req.body.email, req.body.password);
-            req.session.user = userInfo;
-            return ResponseSuccess(res, userInfo);
+    if (FAKE_DATA) {
+        let userInfo = FakeStore.register(req.body.email, req.body.password);
+        req.session.user = userInfo;
+        return ResponseSuccess(res, userInfo);
+    }
+    // call register
+    return Axios.post(Config.authUrl + '/users', {
+        Username:    req.body.email,
+        Password:    req.body.password,
+        AccountType: 'user',
+        Status:      'unverified',
+        Info:        {
+            Name:    '',
+            Email:   req.body.email,
+            Sex:     '',
+            Address: '',
+            Age:     ''
         }
-
-        return Axios.post(Axios.post(Config.authUrl + '/users', {
+    }).then(function (resp) {
+        var ret = transformUserInfo(resp.data);
+        // sign in to get AccountId
+        return Axios.post(Config.authUrl + '/auth/signin', {
             Username: req.body.email,
             Password: req.body.password
         }).then(function (resp) {
-            console.log('resp', resp);
-            var ret = {
-                id:          resp.AccountId,
-                accountType: resp.AccountType,
-                username:    resp.UserName,
-                status:      resp.Status,
-                accessLevel: resp.AccessLevels || [],
-                info:        {
-                    address: resp.Info.Address,
-                    age:     resp.Info.Age,
-                    name:    resp.Info.Name,
-                    sex:     resp.Info.Sex
-                }
-            };
-            return api.getSiteList(resp.AccountId).then(function (resp) {
-                ret.sites = resp;
-                return ret;
-            });
-        }));
-    } catch (err) {
+            // save Account info to session
+            req.session.user = resp.data;
+            ResponseSuccess(res, resp.data);
+        });
+    }).catch(function (err) {
+        console.error('register failed', req.session.user, err);
         ResponseError(res, err.toString());
-    }
+    });
 });
 
 App.get('/api/websites', (req, res, next) => {
     if (!req.session.user) {
         return ResponseError(res, 'session not valid');
     }
-    let sites = FakeStore.getSites(req.session.user.id);
-    ResponseSuccess(res, sites);
+    if (FAKE_DATA) {
+        ResponseSuccess(res, FakeStore.getSites(req.session.user.id));
+    } else {
+        Axios.get(`http://api.easywebhub.com/users/${req.session.user.id}/websites`)
+            .then(function (resp) {
+                ResponseSuccess(res, resp.data);
+            })
+            .catch(function (err) {
+                console.error('websites failed', req.session.user, err);
+                ResponseError(res, err.toString());
+            });
+    }
 });
 
-App.post('/api/website', JsonBodyParser, (req, res, next) => {
+App.post('/api/websites', JsonBodyParser, (req, res, next) => {
     if (!req.session.user) {
         return ResponseError(res, 'session not valid');
     }

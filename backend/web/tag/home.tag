@@ -6,41 +6,38 @@
     <!--</div>-->
     <!--</div>-->
     <div class="des-hero">
+        <div class="ui grid container ">
+            <div class="eight wide column">
+                <a href="http://easywebhub.com" target="_blank">
+                    <img src="/img/ewh/logo-easyweb-white.png" class="ui image" width="150" alt="">
+                </a>
+            </div>
 
-        <!--<div class="ui grid container ">-->
-        <!--<div class="eight wide column">-->
+            <div class="eight wide column" style="text-align: right">
+                <div class="ui dropdown top right pointing">
+                    <input type="hidden" name="gender">
+                    <img class="ui avatar image" src="/img/ewh/jenny-user.jpg">
+                    <span>{username}</span>
+                    <i class="dropdown icon"></i>
 
-        <!--<a href="http://easywebhub.com" target="_blank">-->
-
-        <!--<img src="/img/ewh/logo-easyweb-white.png" class="ui image" width="150" alt="">-->
-        <!--</a>-->
-        <!--</div>-->
-
-        <!--<div class="eight wide column" style="text-align: right">-->
-        <!--<div class="ui dropdown top right pointing">-->
-        <!--<input type="hidden" name="gender">-->
-        <!--<img class="ui avatar image" src="/img/ewh/jenny-user.jpg">-->
-        <!--<span>{username}</span>-->
-        <!--<i class="dropdown icon"></i>-->
-
-        <!--<div class="menu">-->
-        <!--<a class="item disabled" data-value="changeUserData"><i class="edit icon"></i> Edit profile</a>-->
-        <!--<a class="item disabled" data-value="changeUserPassword"><i class="lock icon"></i> Change password</a>-->
-        <!--<div class="divider"></div>-->
-        <!--<a class="item" data-value="signOut"><i class="sign out icon"></i> Log out</a>-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
+                    <div class="menu">
+                        <a class="item disabled" data-value="changeUserData"><i class="edit icon"></i> Edit profile</a>
+                        <a class="item disabled" data-value="changeUserPassword"><i class="lock icon"></i> Change password</a>
+                        <div class="divider"></div>
+                        <a class="item" data-value="signOut" onclick="{signOut}"><i class="sign out icon"></i> Log out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
-        <!--<div class="ui grid container ">-->
-        <!--<div class="wide column">-->
-        <!--<h1 class="ui header huge">Present your website, easily</h1>-->
-        <!--<h3>An open framework lets you build awesome websites with only HTML, CSS skills</h3>-->
-        <!--<div><i class="angle down icon large"></i></div>-->
-        <!--</div>-->
-        <!--</div>-->
+        <div class="ui grid container ">
+            <div class="wide column">
+                <h1 class="ui header huge">Present your website, easily</h1>
+                <h3>An open framework lets you build awesome websites with only HTML, CSS skills</h3>
+                <div><i class="angle down icon large"></i></div>
+            </div>
+        </div>
     </div>
 
     <div class="marketplace">
@@ -48,14 +45,14 @@
             <div class="sixteen wide column">
                 <!--<h1 class="ui header weight-300 orange">Website Marketplace</h1>-->
                 <div class="ui three stackable doubling cards">
-                    <a each="{template, index in templateList}" class="ui card" href="" onclick="{showCreateSite.bind(this, template)}">
+                    <a each="{template, index in templateList}" class="ui card" href="#" onclick="{showCreateSite}">
                         <div class="image">
-                            <img src="{marketPlaceTemplateImageList[(index + 3) %4]}">
+                            <!--<img src="{marketPlaceTemplateImageList[(index + 3) %4]}">-->
                         </div>
                         <div class="content">
                             <div class="header">{template.name}</div>
                             <div class="description">
-                                <p>Landing page for your company</p>
+                                <p>{template.description}</p>
                             </div>
                         </div>
 
@@ -73,11 +70,11 @@
             <div class="sixteen wide column">
                 <h2 class="ui header blue weight-300">
                     Your websites:
-                    <!--<div class="sub header">Choose a website to continue your work</div>-->
+                    <div class="sub header">Choose a website to continue your work</div>
                 </h2>
 
                 <div class="ui four stackable doubling cards">
-                    <a each="{site, index in sites}" class="ui card" href="" onclick="{openSite.bind(this, site)}">
+                    <a each="{site, index in sites}" class="ui card" href="#" onclick="{openSite}">
                         <div class="image">
                             <img src="{marketPlaceTemplateImageList[index % 4]}">
                         </div>
@@ -92,25 +89,35 @@
                             {moment("2016-10-20T08:54:54.924Z").fromNow()}
                         </div>
                     </a>
-
                 </div>
             </div>
         </div>
     </div>
 
+    <dialog-new-site ref="dialogNewSite"></dialog-new-site>
+
     <script>
         var me = this;
         me.marketPlaceTemplateImageList = [];
         me.templateList = [];
+        me.sites = [];
 
         me.loadUser = function (user) {
             console.log('home - loadUser', user);
-            axios.get('/templates').then(function (resp) {
-                console.log('templates resp', resp);
+            axios.get('/api/templates').then(function (resp) {
+                console.log('api/templates resp', resp);
                 me.templateList = resp.data.templates;
                 me.update();
             }).catch(function (err) {
-                console.log('get templates error', err);
+                console.log('api/templates error', err);
+            });
+
+            axios.get('/api/websites').then(function (resp) {
+                console.log('api/websites resp', resp);
+                me.sites = resp.data;
+                me.update();
+            }).catch(function (err) {
+                console.log('api/websites error', err);
             })
         };
 
@@ -120,6 +127,15 @@
 
         me.hide = function () {
             $(this.root).hide();
+        };
+
+        me.openSite = function (e) {
+            console.log('openSite', e.item);
+        };
+
+        me.showCreateSite = function (e) {
+            console.log('showCreateSite', e.item);
+            me.refs.dialogNewSite.show(e.item.template);
         };
 
         //        var sideBar, editor, sitePath;
@@ -189,6 +205,8 @@
         //        });
 
         me.on('mount', function () {
+            $(me.root).find('.menu').dropdown();
+
 //            sideBar = me.tags['sidebar'];
 //            editor = me.tags['iframe-inline-editor'];
 //
