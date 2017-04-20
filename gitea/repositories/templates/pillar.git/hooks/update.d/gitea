@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-"D:/Project/ewh-full/gitea/gitea-1.1.0-windows-4.0-386.exe" hook --config='D:/Project/ewh-full/gitea/custom/conf/app.ini' update $1 $2 $3

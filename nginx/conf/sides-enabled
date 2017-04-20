@@ -1,0 +1,14 @@
+server {
+    listen 80;
+    listen [::]:80;
+
+    root D:\Project\ms-site-builder\repositories/use/repo;
+    index index.html index.htm;
+
+    server_name repo.use.easywebhub.me;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+

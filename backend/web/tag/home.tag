@@ -14,7 +14,7 @@
             </div>
 
             <div class="eight wide column" style="text-align: right">
-                <div class="ui dropdown top right pointing">
+                <div ref="userDropDownMenu" class="ui dropdown top right pointing">
                     <input type="hidden" name="gender">
                     <img class="ui avatar image" src="/img/ewh/jenny-user.jpg">
                     <span>{username}</span>
@@ -24,7 +24,7 @@
                         <a class="item disabled" data-value="changeUserData"><i class="edit icon"></i> Edit profile</a>
                         <a class="item disabled" data-value="changeUserPassword"><i class="lock icon"></i> Change password</a>
                         <div class="divider"></div>
-                        <a class="item" data-value="signOut" onclick="{signOut}"><i class="sign out icon"></i> Log out</a>
+                        <a class="item" onclick="{signOut}"><i class="sign out icon"></i> Log out</a>
                     </div>
                 </div>
             </div>
@@ -121,6 +121,12 @@
             })
         };
 
+        me.signOut = function () {
+            axios.get('/api/sign-out').then(function () {
+                // console.log('TODO unmount');
+            });
+        };
+
         me.show = function () {
             $(this.root).show();
         };
@@ -205,7 +211,7 @@
         //        });
 
         me.on('mount', function () {
-            $(me.root).find('.menu').dropdown();
+            $(me.refs.userDropDownMenu).dropdown();
 
 //            sideBar = me.tags['sidebar'];
 //            editor = me.tags['iframe-inline-editor'];

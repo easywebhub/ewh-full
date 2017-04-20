@@ -3,15 +3,16 @@
 const Argv = require('minimist')(process.argv.slice(2));
 const Helmet = require('helmet');
 const Session = require('express-session');
+const LokiStore = require('connect-loki')(Session);
 const Express = require('express');
 const BodyParser = require('body-parser');
 const Proxy = require('http-proxy-middleware');
 const Axios = require('axios');
+const Promise = require('bluebird');
 const argv = require('minimist')(process.argv.slice(2));
 const App = Express();
 const Url = require('url');
 const Fs = require('fs');
-
 
 const DEBUG = /--debug/.test(process.argv.toString());
 const FAKE_DATA = false;
@@ -24,9 +25,11 @@ App.disable('x-powered-by');
 
 App.use(Session({
     secret:            'bi mat',
+    store:             new LokiStore({}),
     resave:            false,
     saveUninitialized: true,
-    cookie:            {secure: false}
+    cookie:            {secure: false},
+    unset:             'destroy',
 }));
 
 process.on('uncaughtException', (err) => {
@@ -218,7 +221,7 @@ App.get('/api/websites', (req, res, next) => {
     if (FAKE_DATA) {
         ResponseSuccess(res, FakeStore.getSites(req.session.user.id));
     } else {
-        Axios.get(`http://api.easywebhub.com/users/${req.session.user.id}/websites`)
+        Axios.get(`${Config.authUrl}/users/${req.session.user.id}/websites`)
             .then(function (resp) {
                 ResponseSuccess(res, resp.data);
             })
@@ -229,12 +232,92 @@ App.get('/api/websites', (req, res, next) => {
     }
 });
 
+App.post('/api/check-repository-name', JsonBodyParser, (req, res, next) => {
+    if (!req.body.repositoryName)
+        return ResponseError(res, 'invalid repository name');
+    Axios.get(`${Config.authUrl}/users/${req.session.user.id}/websites`)
+        .then(function (resp) {
+            ResponseSuccess(res, resp.data);
+        })
+        .catch(function (err) {
+            ResponseError(res, err.toString());
+        });
+});
+
+const genRepoName = function (name) {
+    let ret = name.replace(/[\s]+/g, '-');
+    ret = ret.replace(/[^A-Za-z0-9\-_]/g, '');
+    return ret;
+};
+
+function genUsername(email) {
+    return email.replace(/[@.]/g, '-');
+}
+
 App.post('/api/websites', JsonBodyParser, (req, res, next) => {
     if (!req.session.user) {
         return ResponseError(res, 'session not valid');
     }
+
     let siteName = req.body.siteName;
-    ResponseSuccess(res, FakeStore.getSite(req.session.user.id, siteName));
+    let templateName = req.body.templateName;
+    let repoName = genRepoName(siteName);
+
+    // call gitea wrapper migration repos
+    // TODO tam thoi req.session.user.username chinh la email
+    let postData = {
+        email:          req.session.user.username,
+        templateName:   templateName,
+        repositoryName: repoName,
+    };
+    console.log('start call remote migration');
+    Axios.post('http://127.0.0.1:7000/migration', postData).then(resp => {
+        let newSiteInfo = resp.data;
+        let username = genUsername(req.session.user.username);
+        let uri = Url.parse(newSiteInfo.url);
+        uri.username = newSiteInfo.username;
+        uri.password = newSiteInfo.password;
+        let fullRepoUrl = `${uri.protocol}//${newSiteInfo.username}:${newSiteInfo.password}@${uri.host}${uri.path}`;
+
+        console.log('migration resp', resp.data);
+        Promise.all([
+            // call server Thanh add new website
+            Axios.post(`${Config.authUrl}/users/${req.session.user.id}/websites`, {
+                'Name':          newSiteInfo.fullName, // repoName: fullName username/repoName
+                'DisplayName':   siteName,             // site name
+                'Url':           newSiteInfo.url,
+                'WebTemplateId': templateName,
+            }),
+            // TODO call tao cloudflare subdomain
+
+            // TODO call create nginx config
+
+            // call ms-builder init repos
+            Axios.post('http://localhost:8003/init', {repoUrl: fullRepoUrl}),
+        ]).then(resp => {
+            console.log('ALL success', resp);
+            ResponseSuccess(res, []);
+        }).catch(err => {
+            console.log('All failed', err);
+            ResponseError(res, err.toString());
+        });
+    }).catch(err => {
+        console.log('migration err', err);
+        ResponseError(res, err.toString());
+    });
+
+
+});
+
+// Axios.post('http://127.0.0.1:7000/migration', {}).then(resp => {
+//     console.log('migration resp');
+// }).catch(err => {
+//     console.log('migration err', err);
+// });
+
+App.get('/api/sign-out', function (req, res, next) {
+    delete req.session.user;
+    next();
 });
 
 

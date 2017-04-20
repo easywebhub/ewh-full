@@ -7,3 +7,5 @@
 /gitea/data
 /gitea/indexers
 /backend/config.json
+/backend/session-store.db
+/gitea/repositories
