@@ -7,7 +7,7 @@
         </div>
         <div class="ui top right attached label" style="padding: 3px">
             <div class="ui mini primary button {disabled: isBuilding}" click="{buildSite}" title="Build Web Site">BUILD</div>
-            <div class="ui mini compact violet icon button {disabled: isBuilding}" click="{openExternalBrowser}" title="Open Web On External Browser"><i class="globe icon"></i></div>
+            <div class="ui mini violet icon button {disabled: isBuilding}" click="{openExternalBrowser}" title="Open Web On External Browser"><i class="globe icon"></i></div>
         </div>
         <div class="ui segment" style="height: calc(100vh - 40px); padding: 0; margin-top: 35px; box-shadow: none; border: none;">
             <div ref="loader" class="ui inverted dimmer">
@@ -29,6 +29,7 @@
         var FORM_END_2 = /---[\r\n]/;
 
         me.isBuilding = false;
+        me.reviewUrl = '';
 
         me.showLoading = function () {
             $(me.refs.loader).addClass('active');
@@ -47,8 +48,12 @@
             iframe.src = url;
         };
 
+        me.setReviewUrl = function (url) {
+            me.reviewUrl = url;
+        };
+
         me.openExternalBrowser = function () {
-            var win = window.open(iframe.src, '_blank');
+            var win = window.open(me.reviewUrl, '_blank');
             win.focus();
         };
 
@@ -222,7 +227,6 @@
         me.on('mount', function () {
             iframe = $(me.root).find('iframe')[0];
 
-            window.iframeInlineEditor = me.refs['iframeInlineEditor'];
             me.refs['iframeInlineEditor'].onload = function () {
                 console.log('preview loaded, start inject');
 

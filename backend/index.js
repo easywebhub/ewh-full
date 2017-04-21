@@ -63,10 +63,17 @@ const ResponseSuccess = function (res, data) {
 };
 
 function createProxyHandler(target) {
+    // console.log('createProxyHandler proxy target', target);
     return Proxy({
         target:       target,
         changeOrigin: true,
         pathRewrite:  function (path, req) {
+            // console.log('createProxyHandler path', path);
+            // remove /proxy
+            // var pathParts = path.split('/');
+            // pathParts.shift(); // remove first /
+            // pathParts.shift(); // remove 'proxy'
+            // path = '/' + pathParts.join('/');
             // console.log('path', path);
             if (!req.headers['referer']) return path;
             let uri = Url.parse(req.headers['referer']);
@@ -107,11 +114,6 @@ function createProxyHandler(target) {
     });
 }
 
-let proxyGet = createProxyHandler(MS_SITE_BUILDER_URL + '/read-file/');
-let proxyPost = createProxyHandler(MS_SITE_BUILDER_URL + '/write-file/');
-
-App.get('/proxy', proxyGet);
-App.post('/proxy', proxyPost);
 
 App.get('/check-token', (req, res, next) => {
     if (!req.session.user) {
@@ -137,7 +139,7 @@ App.get('/api/templates', (req, res, next) => {
 let staticHandler = Express.static('web');
 
 App.get('/:username/:repository', staticHandler);
-App.use('/', staticHandler);
+App.use('/ide', staticHandler);
 
 let transformUserInfo = function (user) {
     return {
@@ -190,7 +192,7 @@ App.post('/api/user/login', JsonBodyParser, (req, res, next) => {
 App.post('/api/user', JsonBodyParser, (req, res, next) => {
     if (FAKE_DATA) {
         let userInfo = FakeStore.register(req.body.email, req.body.password);
-        req.session.user = userInfo;
+        req.session.user = transformUserInfo(userInfo);
         return ResponseSuccess(res, userInfo);
     }
     // call register
@@ -214,7 +216,7 @@ App.post('/api/user', JsonBodyParser, (req, res, next) => {
             Password: req.body.password
         }).then(function (resp) {
             // save Account info to session
-            req.session.user = resp.data;
+            req.session.user = transformUserInfo(resp.data);
             ResponseSuccess(res, resp.data);
         });
     }).catch(function (err) {
@@ -232,7 +234,19 @@ App.get('/api/websites', (req, res, next) => {
     } else {
         Axios.get(`${AUTH_URL}/users/${req.session.user.id}/websites`)
             .then(function (resp) {
-                ResponseSuccess(res, resp.data);
+                let usernameUrl = genUsername(req.session.user.username);
+                let ret = _.map(resp.data, data => {
+                    return {
+                        confirmed:      data.Confirmed,
+                        createDate:     data.CreateDate,
+                        displayName:    data.DisplayName,
+                        name:           data.Name,
+                        repositoryPath: usernameUrl + '/' + data.Name,
+                        id:             data.WebsiteId,
+                        websiteType:    data.WebsiteType,
+                    }
+                });
+                ResponseSuccess(res, ret);
             })
             .catch(function (err) {
                 console.error('websites failed', req.session.user, err);
@@ -245,6 +259,7 @@ App.post('/api/check-repository-name', JsonBodyParser, (req, res, next) => {
     if (!req.body.repositoryName)
         return ResponseError(res, 'invalid repository name');
     let repositoryName = req.body.repositoryName;
+    // console.log('check repo name exists', req.session.user, `${AUTH_URL}/users/${req.session.user.id}/websites`);
     Axios.get(`${AUTH_URL}/users/${req.session.user.id}/websites`)
         .then(function (resp) {
             let exists = _.find(resp.data, {Name: repositoryName});
@@ -319,9 +334,10 @@ App.post('/api/websites', JsonBodyParser, (req, res, next) => {
 
             // call ms-builder init repos
             Axios.post(`${MS_SITE_BUILDER_URL}/init`, {repoUrl: fullRepoUrl}),
-        ]).then(resp => {
-            console.log('ALL success', resp);
-            ResponseSuccess(res, []);
+        ]).then(results => {
+            let ret = _.map(results, result => result.data);
+            console.log('ALL success', ret);
+            ResponseSuccess(res, 'success');
         }).catch(err => {
             console.log('All failed', err);
             ResponseError(res, err.toString());
@@ -334,6 +350,41 @@ App.post('/api/websites', JsonBodyParser, (req, res, next) => {
 
 });
 
+App.get('/api/contents/:usernameUrl/:repositoryName', JsonBodyParser, (req, res, next) => {
+    // TODO check if user own this repository;
+    if (!req.session.user) {
+        return ResponseError(res, 'session not valid');
+    }
+
+    let usernameUrl = genUsername(req.session.user.username);
+    if (usernameUrl !== req.params.usernameUrl)
+        return ResponseError(res, 'wrong owner repository');
+
+    let contentUrl = MS_SITE_BUILDER_URL + '/read-dir/' + usernameUrl + '/' + req.params.repositoryName + '/content';
+    console.log('contentUrl', contentUrl);
+    Axios.get(contentUrl).then(resp => {
+        return ResponseSuccess(res, resp.data);
+    }).catch(err => {
+        console.log('read-dir failed', err);
+        return ResponseError(res, err);
+    })
+});
+
+App.get('/api/file/:usernameUrl/:repositoryName', JsonBodyParser, (req, res, next) => {
+    if (!req.body.repositoryName)
+        return ResponseError(res, 'invalid repository name');
+    let usernameUrl = genUsername(req.session.user.username);
+    if (usernameUrl !== req.params.usernameUrl)
+        return ResponseError(res, 'wrong owner repository');
+    let contentFileUrl = MS_SITE_BUILDER_URL + '/read-file/' + usernameUrl + '/' + req.params.repositoryName + '/content/index.md';
+    Axios.get(contentFileUrl).then(resp => {
+        res.end(resp.data);
+    }).catch(err => {
+        console.log('read-dir failed', err);
+        return ResponseError(res, err);
+    })
+});
+
 // Axios.post('http://127.0.0.1:7000/migration', {}).then(resp => {
 //     console.log('migration resp');
 // }).catch(err => {
@@ -342,8 +393,28 @@ App.post('/api/websites', JsonBodyParser, (req, res, next) => {
 
 App.get('/api/sign-out', function (req, res, next) {
     delete req.session.user;
-    next();
+    res.status(200);
+    res.end();
 });
+
+App.post('/api/build', JsonBodyParser, function (req, res, next) {
+    Axios.post(MS_SITE_BUILDER_URL + '/build', {
+        repoUrl: req.body.repoUrl,
+        task:    req.body.task
+    }).then(function (resp) {
+        return ResponseSuccess(res, resp.data);
+    }).catch(err => {
+        console.log('build error', err);
+        return ResponseError(res, err);
+    });
+});
+
+let proxyGet = createProxyHandler(MS_SITE_BUILDER_URL + '/read-file/');
+let proxyPost = createProxyHandler(MS_SITE_BUILDER_URL + '/write-file/');
+
+// TODO add authentication chong write repos khong thuoc quyền
+App.get('*', proxyGet);
+App.post('*', proxyPost);
 
 let listener = App.listen(PORT, HOST, function () {
     let address = listener.address();

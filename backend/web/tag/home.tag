@@ -30,7 +30,6 @@
             </div>
         </div>
 
-
         <div class="ui grid container ">
             <div class="wide column">
                 <h1 class="ui header huge">Present your website, easily</h1>
@@ -74,12 +73,12 @@
                 </h2>
 
                 <div class="ui four stackable doubling cards">
-                    <a each="{site, index in sites}" class="ui card" href="#" onclick="{openSite}">
+                    <a each="{site, index in sites}" class="ui card" href="#" onclick="{openSiteByClick}">
                         <div class="image">
                             <img src="{marketPlaceTemplateImageList[index % 4]}">
                         </div>
                         <div class="content">
-                            <div class="header">{site.DisplayName}</div>
+                            <div class="header">{site.displayName}</div>
                             <div class="description">
                             </div>
                         </div>
@@ -99,23 +98,30 @@
         me.templateList = [];
         me.sites = [];
 
-        me.loadUser = function (user) {
-            console.log('home - loadUser', user);
+        me.loadSite = function (user) {
+            axios.get('/api/websites').then(function (resp) {
+                console.log('api/websites resp', resp);
+                me.sites = _.sortBy(resp.data, 'Name');
+                me.update();
+            }).catch(function (err) {
+                console.log('api/websites error', err);
+            });
+        };
+
+        me.loadTemplate = function (user) {
             axios.get('/api/templates').then(function (resp) {
                 console.log('api/templates resp', resp);
-                me.templateList = resp.data.templates;
+                me.templateList = _.sortBy(resp.data.templates, 'Name');
                 me.update();
             }).catch(function (err) {
                 console.log('api/templates error', err);
             });
+        };
 
-            axios.get('/api/websites').then(function (resp) {
-                console.log('api/websites resp', resp);
-                me.sites = resp.data;
-                me.update();
-            }).catch(function (err) {
-                console.log('api/websites error', err);
-            })
+        me.loadUser = function (user) {
+            console.log('home - loadUser', user);
+            me.loadTemplate(user);
+            me.loadSite(user);
         };
 
         me.signOut = function () {
@@ -132,8 +138,15 @@
             $(this.root).hide();
         };
 
-        me.openSite = function (e) {
-            console.log('openSite', e.item);
+        me.openSiteByClick = function (e) {
+            console.log('openSiteByClick', e.item);
+            me.hide();
+            me.openSite(e.item);
+        };
+
+        me.openSite = function (siteInfo) {
+            console.log('openSite', siteInfo);
+            me.event.trigger('openSite', siteInfo);
         };
 
         me.showCreateSite = function (e) {

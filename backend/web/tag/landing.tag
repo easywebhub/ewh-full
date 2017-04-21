@@ -1,10 +1,9 @@
 <landing>
     <dialog-login-signup ref="dialogLoginSignUp"></dialog-login-signup>
     <home ref="home"></home>
-
+    <website-editor ref="websiteEditor"></website-editor>
     <script>
         var me = this;
-
         me.store.isLoggedIn = false;
 
         me.checkToken = function () {

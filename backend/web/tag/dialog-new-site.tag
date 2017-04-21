@@ -127,9 +127,10 @@
                 templateName: me.template.name,
                 siteName:     me.siteName,
             }).then(function (resp) {
-                console.log('new site success', resp);
+                console.log('new site success', resp.data);
                 me.migrating = false;
                 me.update();
+                me.hide();
 //                me.hide();
 //                console.log('start open site', siteFolderName);
 //                // open site using site folder name in disk not displayName
