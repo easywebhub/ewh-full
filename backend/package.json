@@ -13,13 +13,13 @@
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.1",
     "cloudflare": "^1.1.1",
-    "connect-loki": "^1.0.9",
     "express": "^4.15.2",
     "express-session": "^1.15.2",
     "fs-extra": "^2.1.2",
     "helmet": "^3.5.0",
     "http-proxy-middleware": "^0.17.4",
     "lodash": "^4.17.4",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "session-file-store": "^1.0.0"
   }
 }

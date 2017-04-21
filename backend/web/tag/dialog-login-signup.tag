@@ -101,11 +101,13 @@
         });
 
         me.show = function () {
-            modal.modal('show');
+            if (modal)
+                modal.modal('show');
         };
 
         me.hide = function () {
-            modal.modal('hide');
+            if(modal)
+                modal.modal('hide');
         };
 
         me.submit = function () {

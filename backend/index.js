@@ -3,7 +3,7 @@
 const Argv = require('minimist')(process.argv.slice(2));
 const Helmet = require('helmet');
 const Session = require('express-session');
-const LokiStore = require('connect-loki')(Session);
+const FileStore = require('session-file-store')(Session);
 const Express = require('express');
 const BodyParser = require('body-parser');
 const Proxy = require('http-proxy-middleware');
@@ -13,6 +13,7 @@ const argv = require('minimist')(process.argv.slice(2));
 const App = Express();
 const Url = require('url');
 const Fs = require('fs');
+const _ = require('lodash');
 
 const DEBUG = /--debug/.test(process.argv.toString());
 const FAKE_DATA = false;
@@ -20,12 +21,21 @@ const FakeStore = require('./fake-store.js');
 
 const Config = JSON.parse(Fs.readFileSync('config.json'));
 
+const HOST = argv.host || process.env.HOST || '0.0.0.0';
+const PORT = argv.port || process.env.PORT || 8002;
+const TIMEOUT = argv.timeout || process.env.TIMEOUT || 300000;
+const MS_SITE_BUILDER_URL = argv.builderUrl || process.env.MS_SITE_BUILDER_URL || 'http://localhost:8003';
+const AUTH_URL = argv.authUrl || process.env.AUTH_URL || 'https://api.easywebhub.com';
+const GITEA_WRAPPER_URL = argv.giteaWrapperUrl || process.env.GITEA_WRAPPER_URL || 'http://localhost:7000';
+
 App.use(Helmet());
 App.disable('x-powered-by');
 
 App.use(Session({
     secret:            'bi mat',
-    store:             new LokiStore({}),
+    store:             new FileStore({
+        retries: 0,
+    }),
     resave:            false,
     saveUninitialized: true,
     cookie:            {secure: false},
@@ -97,14 +107,13 @@ function createProxyHandler(target) {
     });
 }
 
-let proxyGet = createProxyHandler(Config.builderUrl + '/read-file/');
-let proxyPost = createProxyHandler(Config.builderUrl + '/write-file/');
+let proxyGet = createProxyHandler(MS_SITE_BUILDER_URL + '/read-file/');
+let proxyPost = createProxyHandler(MS_SITE_BUILDER_URL + '/write-file/');
 
 App.get('/proxy', proxyGet);
 App.post('/proxy', proxyPost);
 
 App.get('/check-token', (req, res, next) => {
-    console.log('check user token', !!req.session.user);
     if (!req.session.user) {
         res.sendStatus(401);
     } else {
@@ -159,7 +168,7 @@ App.post('/api/user/login', JsonBodyParser, (req, res, next) => {
     }
 
     // TODO check email, password và keu server đổi đăng ký sang email
-    return Axios.post(Config.authUrl + '/auth/signin', {
+    return Axios.post(AUTH_URL + '/auth/signin', {
         Username: req.body.email,
         Password: req.body.password
     }).then(function (resp) {
@@ -221,7 +230,7 @@ App.get('/api/websites', (req, res, next) => {
     if (FAKE_DATA) {
         ResponseSuccess(res, FakeStore.getSites(req.session.user.id));
     } else {
-        Axios.get(`${Config.authUrl}/users/${req.session.user.id}/websites`)
+        Axios.get(`${AUTH_URL}/users/${req.session.user.id}/websites`)
             .then(function (resp) {
                 ResponseSuccess(res, resp.data);
             })
@@ -235,9 +244,15 @@ App.get('/api/websites', (req, res, next) => {
 App.post('/api/check-repository-name', JsonBodyParser, (req, res, next) => {
     if (!req.body.repositoryName)
         return ResponseError(res, 'invalid repository name');
-    Axios.get(`${Config.authUrl}/users/${req.session.user.id}/websites`)
+    let repositoryName = req.body.repositoryName;
+    Axios.get(`${AUTH_URL}/users/${req.session.user.id}/websites`)
         .then(function (resp) {
-            ResponseSuccess(res, resp.data);
+            let exists = _.find(resp.data, {Name: repositoryName});
+            if (exists !== undefined) {
+                ResponseError(res, `repository name ${repositoryName} already exists`);
+            } else {
+                ResponseSuccess(res, resp.data);
+            }
         })
         .catch(function (err) {
             ResponseError(res, err.toString());
@@ -271,8 +286,9 @@ App.post('/api/websites', JsonBodyParser, (req, res, next) => {
         repositoryName: repoName,
     };
     console.log('start call remote migration');
-    Axios.post('http://127.0.0.1:7000/migration', postData).then(resp => {
+    Axios.post(`${GITEA_WRAPPER_URL}/migration`, postData).then(resp => {
         let newSiteInfo = resp.data;
+        // gen url username
         let username = genUsername(req.session.user.username);
         let uri = Url.parse(newSiteInfo.url);
         uri.username = newSiteInfo.username;
@@ -282,18 +298,27 @@ App.post('/api/websites', JsonBodyParser, (req, res, next) => {
         console.log('migration resp', resp.data);
         Promise.all([
             // call server Thanh add new website
-            Axios.post(`${Config.authUrl}/users/${req.session.user.id}/websites`, {
-                'Name':          newSiteInfo.fullName, // repoName: fullName username/repoName
-                'DisplayName':   siteName,             // site name
+            Axios.post(`${AUTH_URL}/users/${req.session.user.id}/websites`, {
+                'Name':          repoName,
+                'DisplayName':   siteName, // site name
                 'Url':           newSiteInfo.url,
                 'WebTemplateId': templateName,
             }),
-            // TODO call tao cloudflare subdomain
 
-            // TODO call create nginx config
+            // call tao cloudflare subdomain
+            Axios.post(`${GITEA_WRAPPER_URL}/repos/create-cloudflare-subdomain`, {
+                "username":       username,
+                "repositoryName": repoName
+            }),
+
+            // call create nginx config
+            Axios.post(`${GITEA_WRAPPER_URL}/repos/create-nginx-virtual-host`, {
+                "username":       username,
+                "repositoryName": repoName
+            }),
 
             // call ms-builder init repos
-            Axios.post('http://localhost:8003/init', {repoUrl: fullRepoUrl}),
+            Axios.post(`${MS_SITE_BUILDER_URL}/init`, {repoUrl: fullRepoUrl}),
         ]).then(resp => {
             console.log('ALL success', resp);
             ResponseSuccess(res, []);
@@ -320,10 +345,7 @@ App.get('/api/sign-out', function (req, res, next) {
     next();
 });
 
-
-const PORT = Argv.PORT || Config.port || 8888;
-
-let listener = App.listen(PORT, Config.host, function () {
+let listener = App.listen(PORT, HOST, function () {
     let address = listener.address();
     console.log(`app listening at ${address.address}:${address.port}`);
 });

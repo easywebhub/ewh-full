@@ -79,14 +79,11 @@
                             <img src="{marketPlaceTemplateImageList[index % 4]}">
                         </div>
                         <div class="content">
-                            <div class="header">{site.name}</div>
+                            <div class="header">{site.DisplayName}</div>
                             <div class="description">
-                                <p>{site.description}</p>
                             </div>
                         </div>
                         <div class="extra content">
-                            <i class="edit icon"></i>
-                            {moment("2016-10-20T08:54:54.924Z").fromNow()}
                         </div>
                     </a>
                 </div>
